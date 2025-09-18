@@ -1,0 +1,74 @@
+<UserControl x:Class="Axis2.WPF.Views.CommandsTabView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:Axis2.WPF.Views"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="200"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Section de gestion des onglets -->
+        <DockPanel Grid.Column="0" Margin="5">
+            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" HorizontalAlignment="Center">
+                <Button Content="Add Tab" Margin="2"/>
+                <Button Content="Delete Tab" Margin="2"/>
+            </StackPanel>
+            <GroupBox Header="Command Tabs">
+                <ListBox>
+                    <!-- Les onglets de commandes seront listés ici -->
+                    <ListBoxItem Content="Custom Tab 1"/>
+                    <ListBoxItem Content="Custom Tab 2"/>
+                </ListBox>
+            </GroupBox>
+        </DockPanel>
+
+        <!-- Section principale avec les boutons et l'éditeur -->
+        <DockPanel Grid.Column="1" Margin="5">
+            <!-- Éditeur de bouton/onglet -->
+            <GroupBox DockPanel.Dock="Bottom" Header="Editor">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Label Content="Tab Text:" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"/>
+                    <TextBox Grid.Row="0" Grid.Column="1" Margin="5"/>
+                    
+                    <Label Content="Button Caption:" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center"/>
+                    <TextBox Grid.Row="1" Grid.Column="1" Margin="5"/>
+
+                    <Label Content="Button Command:" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center"/>
+                    <TextBox Grid.Row="2" Grid.Column="1" Margin="5"/>
+                    
+                    <StackPanel Grid.Row="0" Grid.Column="2" Grid.RowSpan="3" VerticalAlignment="Center">
+                        <Button Content="Add Button" Margin="2"/>
+                        <Button Content="Edit Button" Margin="2"/>
+                        <Button Content="Remove Button" Margin="2"/>
+                    </StackPanel>
+                </Grid>
+            </GroupBox>
+            
+            <!-- Affichage des boutons de commande -->
+            <GroupBox Header="Commands">
+                <WrapPanel>
+                    <!-- Les boutons de commande pour l'onglet sélectionné seront ici -->
+                    <Button Content="My Command 1" Width="100" Height="30" Margin="5"/>
+                    <Button Content="Another Cmd" Width="100" Height="30" Margin="5"/>
+                    <Button Content="Heal" Width="100" Height="30" Margin="5"/>
+                </WrapPanel>
+            </GroupBox>
+        </DockPanel>
+    </Grid>
+</UserControl>

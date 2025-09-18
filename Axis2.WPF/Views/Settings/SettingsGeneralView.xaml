@@ -1,0 +1,58 @@
+<UserControl x:Class="Axis2.WPF.Views.Settings.SettingsGeneralView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:Axis2.WPF.Views.Settings"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Checkboxes -->
+        <CheckBox Content="Allow Multiple Instances" Grid.Row="0" Grid.Column="0" Margin="5"
+                  IsChecked="{Binding AllowMultipleInstances, Mode=TwoWay}"/>
+        <CheckBox Content="Always On Top" Grid.Row="0" Grid.Column="1" Margin="5"
+                  IsChecked="{Binding AlwaysOnTop, Mode=TwoWay}"/>
+        <CheckBox Content="System Close" Grid.Row="1" Grid.Column="0" Margin="5"
+                  IsChecked="{Binding SysClose, Mode=TwoWay}"/>
+        <CheckBox Content="Load Default Profile on Startup" Grid.Row="1" Grid.Column="1" Margin="5"
+                  IsChecked="{Binding LoadDefaultProfile, Mode=TwoWay}"/>
+        <CheckBox Content="Disable Toolbar" Grid.Row="2" Grid.Column="0" Margin="5"
+                  IsChecked="{Binding DisableToolbar, Mode=TwoWay}"/>
+
+        <!-- Command Prefix -->
+        <TextBlock Text="Command Prefix:" Grid.Row="3" Grid.Column="0" Margin="5" VerticalAlignment="Center"/>
+        <TextBox Grid.Row="3" Grid.Column="1" Margin="5"
+                 Text="{Binding CommandPrefix, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+        <!-- UO Title -->
+        <TextBlock Text="UO Title:" Grid.Row="4" Grid.Column="0" Margin="5" VerticalAlignment="Center"/>
+        <TextBox Grid.Row="4" Grid.Column="1" Margin="5"
+                 Text="{Binding UOTitle, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+        <TextBlock Text="Start Tab:" Grid.Row="5" Grid.Column="0" Margin="5" VerticalAlignment="Center"/>
+        <ComboBox Grid.Row="5" Grid.Column="1" Margin="5"
+                  ItemsSource="{Binding AvailableTabs}"
+                  SelectedItem="{Binding SelectedStartTab, Mode=TwoWay}"/>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
+            <Button Content="Reset General Settings" Command="{Binding ResetGeneralSettingsCommand}" Margin="5"/>
+            <Button Content="Reset All Settings" Command="{Binding RelativeSource={RelativeSource AncestorType={x:Type UserControl}}, Path=DataContext.ResetAllSettingsCommand}" Margin="5"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

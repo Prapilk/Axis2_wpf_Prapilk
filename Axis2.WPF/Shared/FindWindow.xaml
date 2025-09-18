@@ -1,0 +1,47 @@
+<Window x:Class="Axis2.WPF.Shared.FindWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Axis2.WPF.Shared"
+        xmlns:models="clr-namespace:Axis2.WPF.Models"
+        mc:Ignorable="d"
+        Title="Find" Height="250" Width="350"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False">
+    <Window.Resources>
+        <local:SearchFieldToVisibilityConverter x:Key="SearchFieldToVisibilityConverter"/>
+    </Window.Resources>
+    <Grid Margin="5">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+
+        <Label Content="Search for:" Grid.Row="0" Grid.Column="0" Margin="0,0,0,5"/>
+        <TextBox x:Name="SearchTermTextBox" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,5" VerticalContentAlignment="Center"/>
+
+        <Label Content="Search By:" Grid.Row="2" Grid.Column="0" Margin="0,0,0,5"/>
+        <ComboBox x:Name="SearchFieldComboBox" Grid.Row="2" Grid.Column="1" Margin="0,0,0,5"
+                  ItemsSource="{x:Static local:SearchField.Values}"
+                  DisplayMemberPath="DisplayName"/>
+
+        <CheckBox x:Name="LightSourceCheckBox" Content="Is Light Source" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,5" VerticalAlignment="Center"/>
+
+        <Label Content="Item Type:" Grid.Row="4" Grid.Column="0" Margin="0,0,0,5"/>
+        <ComboBox x:Name="SObjectTypeComboBox" Grid.Row="4" Grid.Column="1" Margin="0,0,0,5"
+                  ItemsSource="{Binding AvailableScriptTypes}"
+                  Visibility="{Binding ElementName=SearchFieldComboBox, Path=SelectedItem, Converter={StaticResource SearchFieldToVisibilityConverter}, ConverterParameter=Type}"/>
+
+        <Button x:Name="FindButton" Content="Find" Grid.Row="5" Grid.Column="1" Margin="5" Padding="10, 0" Click="FindButton_Click" IsDefault="True"/>
+    </Grid>
+</Window>

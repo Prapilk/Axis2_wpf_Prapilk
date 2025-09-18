@@ -1,0 +1,26 @@
+<Window x:Class="Axis2.WPF.Travel.FindArea"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Find Area" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterScreen">
+    <StackPanel Margin="10">
+        <Label Content="Search by Name or Coordinates (X,Y):"/>
+        <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Width="300" Margin="5"/>
+        <ListView ItemsSource="{Binding SearchResults}" SelectedItem="{Binding SelectedRoom}" Height="200" Margin="5">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Name}" Width="150"/>
+                    <GridViewColumn Header="Group" DisplayMemberBinding="{Binding Group}" Width="100"/>
+                    <GridViewColumn Header="Coords" Width="100">
+                        <GridViewColumn.DisplayMemberBinding>
+                            <MultiBinding StringFormat="{}{0},{1}">
+                                <Binding Path="P.X"/>
+                                <Binding Path="P.Y"/>
+                            </MultiBinding>
+                        </GridViewColumn.DisplayMemberBinding>
+                    </GridViewColumn>
+                </GridView>
+            </ListView.View>
+        </ListView>
+        <Button Content="Go to Selected" IsDefault="True" Click="Find_Click" Margin="5"/>
+    </StackPanel>
+</Window>

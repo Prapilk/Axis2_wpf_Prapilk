@@ -1,0 +1,1 @@
+using System.Windows.Controls; namespace Axis2.WPF.Views { public partial class MiscTabView : System.Windows.Controls.UserControl { public MiscTabView() { InitializeComponent(); } } }

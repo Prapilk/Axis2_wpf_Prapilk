@@ -1,0 +1,75 @@
+<UserControl x:Class="Axis2.WPF.Views.ReminderTabView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:Axis2.WPF.Views"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="200"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Liste des rappels -->
+        <GroupBox Header="Reminders" Grid.Column="0" Margin="5">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Center">
+                    <Button Content="Add" Margin="2"/>
+                    <Button Content="Edit" Margin="2"/>
+                    <Button Content="Delete" Margin="2"/>
+                </StackPanel>
+                <ListBox>
+                    <!-- Les rappels seront listés ici -->
+                    <ListBoxItem Content="Reminder 1"/>
+                    <ListBoxItem Content="Reminder 2"/>
+                </ListBox>
+            </DockPanel>
+        </GroupBox>
+
+        <!-- Éditeur de rappel -->
+        <GroupBox Header="Reminder Editor" Grid.Column="1" Margin="5">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBox Text="Reminder Title" Margin="5" Grid.Row="0"/>
+
+                <RichTextBox Grid.Row="1" Margin="5">
+                    <FlowDocument>
+                        <Paragraph>
+                            <Run Text="Reminder text goes here."/>
+                        </Paragraph>
+                    </FlowDocument>
+                </RichTextBox>
+
+                <Grid Grid.Row="2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <RadioButton Content="Never" IsChecked="True"/>
+                        <RadioButton Content="Once"/>
+                        <RadioButton Content="Daily"/>
+                        <RadioButton Content="Weekly"/>
+                        <RadioButton Content="Monthly"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1">
+                        <DatePicker/>
+                        <ComboBox/> <!-- Pour le TimePicker, un ComboBox peut être utilisé comme substitut simple -->
+                        <CheckBox Content="On Startup"/>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Content="Save" Margin="5"/>
+                            <Button Content="Cancel" Margin="5"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+            </Grid>
+        </GroupBox>
+    </Grid>
+</UserControl>

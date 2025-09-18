@@ -1,0 +1,226 @@
+<UserControl x:Class="Axis2.WPF.Views.TravelTabView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:Axis2.WPF.Views"
+             xmlns:converters="clr-namespace:Axis2.WPF.Converters"
+             xmlns:models="clr-namespace:Axis2.WPF.Models"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+
+    <UserControl.Resources>
+        <local:CrosshairLineConverter x:Key="CrosshairLineConverter"/>
+        <converters:RectToWidthConverter x:Key="RectToWidthConverter"/>
+        <converters:RectToHeightConverter x:Key="RectToHeightConverter"/>
+        <converters:RectToSizeMultiConverter x:Key="RectToSizeMultiConverter"/>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="250"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Left Panel: Categories, Rooms and Locations -->
+        <Grid Grid.Column="0" Margin="5">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Left Panel: Categories, Rooms and Locations -->
+            <GroupBox Grid.Row="0" Header="Regions">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <TreeView ItemsSource="{Binding RegionGroups}" SelectedItemChanged="TreeView_SelectedItemChanged">
+                        <TreeView.Resources>
+                            <HierarchicalDataTemplate DataType="{x:Type models:RegionGroup}" ItemsSource="{Binding Children}">
+                                <TextBlock Text="{Binding Name}"/>
+                            </HierarchicalDataTemplate>
+
+                            <HierarchicalDataTemplate DataType="{x:Type models:AreaDefinition}" ItemsSource="{Binding Rooms}">
+                                <TextBlock Text="{Binding Name}"/>
+                            </HierarchicalDataTemplate>
+                            <DataTemplate DataType="{x:Type models:RoomDefinition}">
+                                <TextBlock Text="{Binding Name}"/>
+                            </DataTemplate>
+                        </TreeView.Resources>
+                    </TreeView>
+                </ScrollViewer>
+            </GroupBox>
+
+            <GroupBox Grid.Row="2" Header="Room/Area Infos" Margin="0,5,0,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Grid.Row="0">
+                        <TreeView ItemsSource="{Binding Rooms}" SelectedItemChanged="RoomsTreeView_SelectedItemChanged">
+                            <TreeView.Resources>
+                                <DataTemplate DataType="{x:Type models:RoomDefinition}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{Binding Name}" FontWeight="Bold"/>
+                                        <TextBlock Text="{Binding Map, StringFormat=' Map:{0}'}" Margin="5,0,0,0"/>
+                                        <TextBlock Text="{Binding P.X, StringFormat=' X:{0}'}" Margin="5,0,0,0"/>
+                                        <TextBlock Text="{Binding P.Y, StringFormat=' Y:{0}'}" Margin="5,0,0,0"/>
+                                        <TextBlock Text="{Binding Z, StringFormat=' Z:{0}'}" Margin="5,0,0,0"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </TreeView.Resources>
+                        </TreeView>
+                    </ScrollViewer>
+                    <GroupBox Header="Rectangles" Grid.Row="1" Margin="0,5,0,0">
+                        <ListView ItemsSource="{Binding SelectedRects}" SelectedItem="{Binding SelectedRect}">
+                            <ListView.View>
+                                <GridView>
+                                    <GridViewColumn Header="X1" DisplayMemberBinding="{Binding X}"/>
+                                    <GridViewColumn Header="Y1" DisplayMemberBinding="{Binding Y}"/>
+                                    <GridViewColumn Header="X2" DisplayMemberBinding="{Binding Right}"/>
+                                    <GridViewColumn Header="Y2" DisplayMemberBinding="{Binding Bottom}"/>
+                                </GridView>
+                            </ListView.View>
+                        </ListView>
+                    </GroupBox>
+                </Grid>
+            </GroupBox>
+
+            <GroupBox Grid.Row="4" Header="Locations" Margin="0,5,0,0">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <ListView ItemsSource="{Binding Locations}" SelectedItem="{Binding SelectedLocation}">
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Name}"/>
+                                <GridViewColumn Header="Map" DisplayMemberBinding="{Binding Map}"/>
+                                <GridViewColumn Header="X" DisplayMemberBinding="{Binding X}"/>
+                                <GridViewColumn Header="Y" DisplayMemberBinding="{Binding Y}"/>
+                                <GridViewColumn Header="Z" DisplayMemberBinding="{Binding Z}"/>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+                </ScrollViewer>
+            </GroupBox>
+        </Grid>
+
+        <!-- Right Panel: Map and Commands -->
+        <Grid Grid.Column="1" Margin="5">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Map Display -->
+            <Border Grid.Row="0" BorderBrush="Black" BorderThickness="1" Margin="0,0,0,5">
+                <Grid>
+                    <Image x:Name="MapImage" Source="{Binding MapImage}"/>
+                    <Canvas x:Name="MapOverlayCanvas" 
+                Background="Transparent"
+                MouseWheel="MapImage_MouseWheel"
+                MouseLeftButtonDown="MapOverlayCanvas_MouseDown" 
+                MouseMove="MapOverlayCanvas_MouseMove" 
+                MouseLeave="MapOverlayCanvas_MouseLeave" 
+                MouseLeftButtonUp="MapOverlayCanvas_MouseUp">
+
+                        <!-- Moving Crosshair (White) -->
+                        <Line X1="{Binding MouseX, Mode=OneWay, Converter={StaticResource CrosshairLineConverter}, ConverterParameter=Start}" Y1="{Binding MouseY, Mode=OneWay}" 
+                  X2="{Binding MouseX, Mode=OneWay, Converter={StaticResource CrosshairLineConverter}, ConverterParameter=End}" Y2="{Binding MouseY, Mode=OneWay}" 
+                  Stroke="White" StrokeThickness="1" Visibility="{Binding MouseCrosshairVisibility, Mode=OneWay}"/>
+                        <Line X1="{Binding MouseX, Mode=OneWay}" Y1="{Binding MouseY, Mode=OneWay, Converter={StaticResource CrosshairLineConverter}, ConverterParameter=Start}" 
+                  X2="{Binding MouseX, Mode=OneWay}" Y2="{Binding MouseY, Mode=OneWay, Converter={StaticResource CrosshairLineConverter}, ConverterParameter=End}" 
+                  Stroke="White" StrokeThickness="1" Visibility="{Binding MouseCrosshairVisibility, Mode=OneWay}"/>
+
+                        <!-- Clicked Crosshair (Red) -->
+                        <Line X1="{Binding ElementName=MapOverlayCanvas, Path=ActualWidth, Converter={StaticResource CrosshairLineConverter}, ConverterParameter=CenterStart}" Y1="{Binding ElementName=MapOverlayCanvas, Path=ActualHeight, Converter={StaticResource CrosshairLineConverter}, ConverterParameter=Center}"
+                  X2="{Binding ElementName=MapOverlayCanvas, Path=ActualWidth, Converter={StaticResource CrosshairLineConverter}, ConverterParameter=CenterEnd}" Y2="{Binding ElementName=MapOverlayCanvas, Path=ActualHeight, Converter={StaticResource CrosshairLineConverter}, ConverterParameter=Center}"
+                  Stroke="Red" StrokeThickness="1" Visibility="{Binding CrosshairVisibility, Mode=OneWay}"/>
+                        <Line X1="{Binding ElementName=MapOverlayCanvas, Path=ActualWidth, Converter={StaticResource CrosshairLineConverter}, ConverterParameter=Center}" Y1="{Binding ElementName=MapOverlayCanvas, Path=ActualHeight, Converter={StaticResource CrosshairLineConverter}, ConverterParameter=CenterStart}"
+                  X2="{Binding ElementName=MapOverlayCanvas, Path=ActualWidth, Converter={StaticResource CrosshairLineConverter}, ConverterParameter=Center}" Y2="{Binding ElementName=MapOverlayCanvas, Path=ActualHeight, Converter={StaticResource CrosshairLineConverter}, ConverterParameter=CenterEnd}"
+                  Stroke="Red" StrokeThickness="1" Visibility="{Binding CrosshairVisibility, Mode=OneWay}"/>
+
+                        <!-- Coordinates TextBlock -->
+                        <Border Background="#CC000000" Padding="5" CornerRadius="3"
+                    Canvas.Left="{Binding CoordinatesTextX, Mode=OneWay}" 
+                    Canvas.Top="{Binding CoordinatesTextY, Mode=OneWay}"
+                    Visibility="{Binding MouseCrosshairVisibility, Mode=OneWay}">
+                            <!-- Changed to MouseCrosshairVisibility -->
+                            <TextBlock Text="{Binding MouseMapCoordinatesText, Mode=OneWay}" Foreground="White" FontSize="12"/>
+                            <!-- Changed to MouseMapCoordinatesText -->
+                        </Border>
+                        <Rectangle Stroke="Blue" StrokeThickness="2"
+                                   Canvas.Left="{Binding DrawingRectX}"
+                                   Canvas.Top="{Binding DrawingRectY}"
+                                   Width="{Binding DrawingRectWidth}"
+                                   Height="{Binding DrawingRectHeight}"
+                                   Visibility="{Binding DrawingRectangleVisibility}"/>
+
+                        <!-- Display existing SelectedRects -->
+                        <ItemsControl ItemsSource="{Binding SelectedRects}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Rectangle Stroke="Green" StrokeThickness="2">
+                                        <Rectangle.RenderTransform>
+                                            <TranslateTransform X="{Binding X}" Y="{Binding Y}"/>
+                                        </Rectangle.RenderTransform>
+                                        <Rectangle.Width>
+                                            <MultiBinding Converter="{StaticResource RectToSizeMultiConverter}">
+                                                <Binding Path="Width"/>
+                                                <Binding Path="DataContext.ZoomLevel" RelativeSource="{RelativeSource AncestorType={x:Type UserControl}}"/>
+                                            </MultiBinding>
+                                        </Rectangle.Width>
+                                        <Rectangle.Height>
+                                            <MultiBinding Converter="{StaticResource RectToSizeMultiConverter}">
+                                                <Binding Path="Height"/>
+                                                <Binding Path="DataContext.ZoomLevel" RelativeSource="{RelativeSource AncestorType={x:Type UserControl}}"/>
+                                            </MultiBinding>
+                                        </Rectangle.Height>
+                                    </Rectangle>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Canvas>
+                </Grid>
+            </Border>
+
+            <!-- Command Buttons -->
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Vertical">
+                    <WrapPanel HorizontalAlignment="Center">
+                        <Button Content="World Map" Margin="2" Command="{Binding ShowMapCommand}"/>
+                        <Button Content="Zoom In" Margin="2" Command="{Binding ZoomInCommand}"/>
+                        <Button Content="Zoom Out" Margin="2" Command="{Binding ZoomOutCommand}"/>
+                        <Button Content="Find Room" Margin="2" Command="{Binding FindAreaCommand}"/>
+                        <Button Content="Clear Search" Margin="2" Command="{Binding ClearSearchCommand}"/>
+                        <Button Content="Locate" Margin="2" Command="{Binding LocateCommand}"/>
+                        <Button Content="Where" Margin="2" Command="{Binding WhereCommand}"/>
+                    </WrapPanel>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5,0,0">
+                        <Button Content="Add" Margin="2" Command="{Binding AddCommand}"/>
+                        <Button Content="Edit" Margin="2" Command="{Binding EditCommand}"/>
+                        <Button Content="Delete" Margin="2" Command="{Binding DeleteCommand}"/>
+                    </StackPanel>
+                </StackPanel>
+
+
+                <StackPanel Grid.Column="1" Orientation="Vertical" HorizontalAlignment="Right">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="Recall" Margin="2" Command="{Binding RecallCommand}"/>
+                        <Button Content="Gate" Margin="2" Command="{Binding GateCommand}"/>
+                    </StackPanel>
+                    <CheckBox Content="Auto-Recall/Gate" IsChecked="{Binding AutoRecallGate}" HorizontalAlignment="Right" Margin="2"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,5,0,0">
+                        <Button Content="Go" Margin="2" FontWeight="Bold" Command="{Binding GoCommand}"/>
+                        <Button Content="Stop" Margin="2" Command="{Binding StopCommand}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

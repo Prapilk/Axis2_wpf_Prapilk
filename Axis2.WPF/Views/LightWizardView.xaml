@@ -1,0 +1,129 @@
+<UserControl x:Class="Axis2.WPF.Views.LightWizardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:viewModels="clr-namespace:Axis2.WPF.ViewModels"
+             xmlns:converters="clr-namespace:Axis2.WPF.Converters"
+             mc:Ignorable="d"
+                          d:DataContext="{d:DesignInstance Type=viewmodels:LightWizardViewModel}">
+    <UserControl.Resources>
+        <converters:ColorIdToBrushConverter x:Key="ColorIdToBrushConverter"/>
+        <converters:SObjectToBitmapSourceConverter x:Key="sObjectConverter"/>
+    </UserControl.Resources>
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBox x:Name="SearchTextBox" Grid.Row="0" Margin="5" TextChanged="SearchTextBox_TextChanged" Text="Search..."/>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Left Panel: List of Light Colors -->
+            <GroupBox Header="Light Colors" Grid.Column="0">
+                <DataGrid x:Name="LightEffectsDataGrid" ItemsSource="{Binding LightColorItems}" SelectedItem="{Binding SelectedLightColorItem}" AutoGenerateColumns="False" IsReadOnly="True">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="ID" Binding="{Binding ItemTileDataItem.Id, StringFormat='0x{0:X4}'}" Width="Auto"/>
+                        <DataGridTextColumn Header="Layer" Binding="{Binding Layer}" Width="Auto"/>
+                        <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </GroupBox>
+
+            <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Center" VerticalAlignment="Stretch"/>
+
+            <!-- Right Panel: Preview and Details -->
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <GroupBox Header="Preview" Grid.Row="0">
+                    <Border BorderBrush="Gray" BorderThickness="1" Background="#FFE0E0E0">
+                        <Grid>
+                            <Image Source="{Binding PreviewItem, Converter={StaticResource sObjectConverter}}" Stretch="None" />
+                            <Image Source="{Binding LightPreviewImage}" Stretch="None" RenderTransformOrigin="0.5,0.5">
+                                <Image.RenderTransform>
+                                    <TransformGroup>
+                                        <ScaleTransform ScaleX="{Binding CurrentZoom}" ScaleY="{Binding CurrentZoom}" />
+                                        <RotateTransform Angle="{Binding CurrentAngle}" />
+                                    </TransformGroup>
+                                </Image.RenderTransform>
+                            </Image>
+                        </Grid>
+                    </Border>
+                </GroupBox>
+
+                <GroupBox Header="Details" Grid.Row="1" Margin="0,5,0,0">
+                    <Grid DataContext="{Binding SelectedLightColorItem.DrawConfigEntry}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="ID:" FontWeight="Bold" Margin="5"/>
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Id, StringFormat='0x{0:X4}'}" Margin="5"/>
+
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Comment:" FontWeight="Bold" Margin="5"/>
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Comment}" Margin="5" TextWrapping="Wrap"/>
+
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Zoom:" FontWeight="Bold" Margin="5"/>
+                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Zoom}" Margin="5"/>
+
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Dezoom:" FontWeight="Bold" Margin="5"/>
+                        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding Dezoom}" Margin="5"/>
+
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Time Zoom:" FontWeight="Bold" Margin="5"/>
+                        <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding TimeZoom}" Margin="5"/>
+
+                        <TextBlock Grid.Row="5" Grid.Column="0" Text="Rotation:" FontWeight="Bold" Margin="5"/>
+                        <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding Rotation}" Margin="5"/>
+
+                        <TextBlock Grid.Row="6" Grid.Column="0" Text="Alternance:" FontWeight="Bold" Margin="5"/>
+                        <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding Alternance}" Margin="5"/>
+
+                        <TextBlock Grid.Row="7" Grid.Column="0" Text="Colors:" FontWeight="Bold" Margin="5" VerticalAlignment="Top"/>
+                        <ItemsControl Grid.Row="7" Grid.Column="1" ItemsSource="{Binding ColorIds}" Margin="5">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border BorderBrush="Black" BorderThickness="1" Width="20" Height="20" Margin="2">
+                                        <Rectangle Fill="{Binding Converter={StaticResource ColorIdToBrushConverter}}"/>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Grid>
+                </GroupBox>
+            </Grid>
+        </Grid>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+            <Button Content="OK" IsDefault="True" MinWidth="75" Margin="0,0,5,0" Command="{Binding OkCommand}"/>
+            <Button Content="Cancel" IsCancel="True" MinWidth="75" Command="{Binding CancelCommand}"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

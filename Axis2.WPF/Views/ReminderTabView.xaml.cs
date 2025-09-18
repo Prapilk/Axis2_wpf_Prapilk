@@ -1,0 +1,1 @@
+using System.Windows.Controls; namespace Axis2.WPF.Views { public partial class ReminderTabView : System.Windows.Controls.UserControl { public ReminderTabView() { InitializeComponent(); } } }

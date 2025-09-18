@@ -1,0 +1,102 @@
+<UserControl x:Class="Axis2.WPF.Views.ProfilesTabView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:Axis2.WPF.Views"
+             xmlns:converters="clr-namespace:Axis2.WPF.Converters"
+             xmlns:models="clr-namespace:Axis2.WPF.Models"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <converters:NotAxisOrNoneConverter x:Key="NotAxisOrNoneConverter"/>
+        <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    </UserControl.Resources>
+    <Grid Margin="10">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="200"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Profile List -->
+        <ListBox Grid.Row="0" Grid.Column="0" ItemsSource="{Binding Profiles}"
+                 SelectedItem="{Binding SelectedProfile, Mode=TwoWay}"
+                 DisplayMemberPath="Name" Margin="0,0,10,0"/>
+
+        <!-- Profile Details -->
+        <Grid Grid.Row="0" Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Text="Profile Name:" Grid.Row="0" Grid.Column="0" Margin="5" VerticalAlignment="Center"/>
+            <TextBox Grid.Row="0" Grid.Column="1" Margin="5" Text="{Binding SelectedProfile.Name, Mode=TwoWay}"
+                     IsEnabled="{Binding SelectedProfile.Name, Converter={StaticResource NotAxisOrNoneConverter}}"/>
+
+            <CheckBox Content="Default Profile" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Margin="5"
+                      IsChecked="{Binding SelectedProfile.IsDefault, Mode=TwoWay}"/>
+            <CheckBox Content="Web Profile" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="5"
+                      IsChecked="{Binding SelectedProfile.IsWebProfile, Mode=TwoWay}"/>
+
+            <TextBlock Text="Base Directory:" Grid.Row="3" Grid.Column="0" Margin="5" VerticalAlignment="Center"
+                       Visibility="{Binding SelectedProfile.IsWebProfile, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=Inverse}"/>
+            <TextBox Grid.Row="3" Grid.Column="1" Margin="5" Text="{Binding SelectedProfile.BaseDirectory, Mode=TwoWay}"
+                     Visibility="{Binding SelectedProfile.IsWebProfile, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=Inverse}"/>
+            <Button Content="Browse" Grid.Row="3" Grid.Column="2" Margin="5" Command="{Binding BrowseDirectoryCommand}"
+                    Visibility="{Binding SelectedProfile.IsWebProfile, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=Inverse}"/>
+
+            <TextBlock Text="URL:" Grid.Row="4" Grid.Column="0" Margin="5" VerticalAlignment="Center"
+                       Visibility="{Binding SelectedProfile.IsWebProfile, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+            <TextBox Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="2" Margin="5" Text="{Binding SelectedProfile.URL, Mode=TwoWay}"
+                     Visibility="{Binding SelectedProfile.IsWebProfile, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
+            <CheckBox Content="Load Resource" Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Margin="5"
+                      IsChecked="{Binding SelectedProfile.LoadResource, Mode=TwoWay}"
+                      Visibility="{Binding SelectedProfile.IsWebProfile, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=Inverse}"/>
+
+            <!-- Script TreeView -->
+            <TreeView Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="3" Margin="5" ItemsSource="{Binding AvailableScripts}">
+                <TreeView.Resources>
+                    <HierarchicalDataTemplate DataType="{x:Type models:ScriptItem}" ItemsSource="{Binding Children}">
+                        <StackPanel Orientation="Horizontal">
+                            <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding Name}" Margin="5,0,0,0"/>
+                        </StackPanel>
+                    </HierarchicalDataTemplate>
+                </TreeView.Resources>
+            </TreeView>
+
+            <!-- Profile Action Buttons -->
+            <StackPanel Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
+                <Button Content="Save" Command="{Binding SaveProfileCommand}" Margin="5"/>
+                <Button Content="Cancel" Command="{Binding CancelProfileCommand}" Margin="5"/>
+                <Button Content="Load" Command="{Binding LoadProfileCommand}" Margin="5"/>
+                <Button Content="Export" Command="{Binding ExportProfileCommand}" Margin="5"/>
+                <Button Content="Save Scripts" Command="{Binding SaveScriptsCommand}" Margin="5"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Global Profile Action Buttons -->
+        <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
+            <Button Content="Add" Command="{Binding AddProfileCommand}" Margin="5"/>
+            <Button Content="Edit" Command="{Binding EditProfileCommand}" Margin="5"/>
+            <Button Content="Delete" Command="{Binding DeleteProfileCommand}" Margin="5"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    
+    <!-- Optimization Settings -->
+    <SatelliteResourceLanguages>fr</SatelliteResourceLanguages> <!-- Only include French resources -->
+    <!-- <PublishTrimmed>true</PublishTrimmed> --> <!-- Enable trimming of unused code -->
+    <!-- <SelfContained>true</SelfContained> --> <!-- Bundle .NET runtime -->
+    <!-- <RuntimeIdentifier>win-x64</RuntimeIdentifier> --> <!-- Specify target runtime -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ICSharpCode.SharpZipLib.dll" Version="0.85.4.369" />
+    <PackageReference Include="Microsoft.VisualStudio.Utilities" Version="17.14.40264" />
+    <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.135" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="SharpZipLib" Version="1.4.2" />
+  </ItemGroup>
+
+</Project>

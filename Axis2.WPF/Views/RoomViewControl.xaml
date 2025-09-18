@@ -1,0 +1,12 @@
+<UserControl x:Class="Axis2.WPF.Views.RoomViewControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="200" d:DesignWidth="200"
+             Loaded="RoomViewControl_Loaded">
+    <Canvas x:Name="RoomViewCanvas" Background="Transparent" SizeChanged="RoomViewCanvas_SizeChanged">
+        <!-- Lines will be drawn here from code-behind -->
+    </Canvas>
+</UserControl>

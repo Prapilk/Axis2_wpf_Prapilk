@@ -1,0 +1,266 @@
+<UserControl x:Class="Axis2.WPF.Views.ItemTabView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:Axis2.WPF.Views"
+             xmlns:models="clr-namespace:Axis2.WPF.Models"
+             xmlns:views="clr-namespace:Axis2.WPF.Views"
+             xmlns:converters="clr-namespace:Axis2.WPF.Converters"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <converters:IsSelectedPathConverter x:Key="IsSelectedPathConverter" />
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+    </UserControl.Resources>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="2*" MinWidth="150"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="3*" MinWidth="200"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="2*" MinWidth="150"/>
+            <ColumnDefinition Width="200"/>
+        </Grid.ColumnDefinitions>
+
+        <TreeView Grid.Column="0" ItemsSource="{Binding Categories}" SelectedItemChanged="TreeView_SelectedItemChanged">
+            <TreeView.Resources>
+                <HierarchicalDataTemplate DataType="{x:Type models:Category}" ItemsSource="{Binding SubSections}">
+                    <TextBlock Text="{Binding Name}" FontWeight="Bold"/>
+                </HierarchicalDataTemplate>
+                <DataTemplate DataType="{x:Type models:SubCategory}">
+                    <TextBlock Text="{Binding Name}"/>
+                </DataTemplate>
+                <Style TargetType="{x:Type TreeViewItem}">
+                    <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+                    <Style.Triggers>
+                        <!-- Category Coloring -->
+                        <MultiDataTrigger>
+                            <MultiDataTrigger.Conditions>
+                                <Condition Binding="{Binding IsExpanded, RelativeSource={RelativeSource Self}}" Value="True" />
+                                <Condition Value="True">
+                                    <Condition.Binding>
+                                        <MultiBinding Converter="{StaticResource IsSelectedPathConverter}">
+                                            <Binding Path="DataContext" RelativeSource="{RelativeSource Self}" />
+                                            <Binding Path="DataContext.SelectedCategoryInTree" RelativeSource="{RelativeSource AncestorType={x:Type UserControl}}" />
+                                        </MultiBinding>
+                                    </Condition.Binding>
+                                </Condition>
+                            </MultiDataTrigger.Conditions>
+                            <Setter Property="Foreground" Value="Blue" />
+                        </MultiDataTrigger>
+                        <!-- SubCategory Coloring -->
+                        <MultiDataTrigger>
+                            <MultiDataTrigger.Conditions>
+                                <Condition Binding="{Binding IsExpanded, RelativeSource={RelativeSource Self}}" Value="True" />
+                                <Condition Value="True">
+                                    <Condition.Binding>
+                                        <MultiBinding Converter="{StaticResource IsSelectedPathConverter}">
+                                            <Binding Path="DataContext" RelativeSource="{RelativeSource Self}" />
+                                            <Binding Path="DataContext.SelectedSubCategoryInTree" RelativeSource="{RelativeSource AncestorType={x:Type UserControl}}" />
+                                        </MultiBinding>
+                                    </Condition.Binding>
+                                </Condition>
+                            </MultiDataTrigger.Conditions>
+                            <Setter Property="Foreground" Value="Green" />
+                        </MultiDataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TreeView.Resources>
+        </TreeView>
+
+        <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Center" VerticalAlignment="Stretch"/>
+
+        <Grid Grid.Column="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <ListView Grid.Row="0" ItemsSource="{Binding DisplayedItems}"
+                      SelectedItem="{Binding SelectedItem}"
+                      AllowDrop="True"
+                      PreviewMouseLeftButtonDown="DisplayedItems_PreviewMouseLeftButtonDown"
+                      MouseMove="DisplayedItems_MouseMove">
+                <ListView.View>
+                    <GridView AllowsColumnReorder="True">
+                        <GridViewColumn Header="Description" DisplayMemberBinding="{Binding Description}" Width="150"/>
+                        <GridViewColumn Header="ID" DisplayMemberBinding="{Binding Id}" Width="80"/>
+                    </GridView>
+                </ListView.View>
+            </ListView>
+
+            <Grid Grid.Row="1" Margin="5">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <GroupBox Grid.Row="0" Grid.Column="0" Header="Item Properties" Margin="5">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                            <TextBlock Text="Z:" VerticalAlignment="Center" Width="80"/>
+                            <TextBox Text="{Binding ZCoordinate}" Width="50"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                            <TextBlock Text="Nuke Arg:" VerticalAlignment="Center" Width="80"/>
+                            <TextBox Text="{Binding NukeArgument}" Width="50"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                            <TextBlock Text="Amount:" VerticalAlignment="Center" Width="80"/>
+                            <TextBox Text="{Binding Amount}" Width="50"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                            <TextBlock Text="Nudge Amount:" VerticalAlignment="Center" Width="80"/>
+                            <TextBox Text="{Binding NudgeAmount}" Width="50"/>
+                        </StackPanel>
+                        <CheckBox Content="Lock Item" IsChecked="{Binding LockItem}" Margin="0,10,0,0"/>
+                    </StackPanel>
+                </GroupBox>
+
+                <GroupBox Grid.Row="0" Grid.Column="1" Header="Item Spawn" Margin="5">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                            <TextBlock Text="Min Time:" VerticalAlignment="Center" Width="80"/>
+                            <TextBox Text="{Binding MinTime}" Width="50"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                            <TextBlock Text="Max Time:" VerticalAlignment="Center" Width="80"/>
+                            <TextBox Text="{Binding MaxTime}" Width="50"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                            <TextBlock Text="Spawn Rate:" VerticalAlignment="Center" Width="80"/>
+                            <TextBox Text="{Binding SpawnRate}" Width="50"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                            <TextBlock Text="Max Dist:" VerticalAlignment="Center" Width="80"/>
+                            <TextBox Text="{Binding MaxDist}" Width="50"/>
+                        </StackPanel>
+                        <Button Content="Init Spawn" Command="{Binding InitSpawnCommand}" Margin="0,10,0,0" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </GroupBox>
+
+                <GroupBox Grid.Row="0" Grid.Column="2" Header="Actions" Margin="5">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <Button Content="Create" Command="{Binding CreateCommand}" Margin="0,0,5,0" Width="60"/>
+                            <Button Content="Tile" Command="{Binding TileCommand}" Margin="0,0,5,0" Width="60"/>
+                            <Button Content="Remove" Command="{Binding RemoveCommand}" Width="60"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5,0,0">
+                            <Button Content="Flip" Command="{Binding FlipCommand}" Margin="0,0,5,0" Width="60"/>
+                            <Button Content="Find" Click="FindButton_Click" Margin="0,0,5,0" Width="60"/>
+                            <Button Content="Nuke" Command="{Binding NukeCommand}" Width="60"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5,0,0">
+                            <CheckBox IsChecked="{Binding IsLightSourceEnabled}" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                            <TextBlock Text="Enable Light Source" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <Button Content="Update Tooltip" Command="{Binding UpdateTooltipCommand}" Margin="0,10,0,0" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </GroupBox>
+
+                <GroupBox Grid.Row="1" Grid.Column="0" Header="Nudge" Margin="5">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,5,0,0" HorizontalAlignment="Center">
+                            <TextBlock Text="Nudge Amount:" VerticalAlignment="Center" Width="80"/>
+                            <TextBox Text="{Binding NudgeAmount}" Width="50"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5,0,0">
+                            <Button Content="Nudge Up" Command="{Binding NudgeUpCommand}" Margin="0,0,5,0" Width="80"/>
+                            <Button Content="Nudge Down" Command="{Binding NudgeDownCommand}" Width="80"/>
+                        </StackPanel>
+                    </StackPanel>
+                </GroupBox>
+
+                <GroupBox Grid.Row="1" Grid.Column="1" Header="Movement" Margin="5">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Button Grid.Row="0" Grid.Column="0" Content="↖" Command="{Binding MoveCommand}" CommandParameter="Move8" Margin="2"/>
+                        <Button Grid.Row="0" Grid.Column="1" Content="↑" Command="{Binding MoveCommand}" CommandParameter="Move1" Margin="2"/>
+                        <Button Grid.Row="0" Grid.Column="2" Content="↗" Command="{Binding MoveCommand}" CommandParameter="Move2" Margin="2"/>
+                        <Button Grid.Row="1" Grid.Column="0" Content="←" Command="{Binding MoveCommand}" CommandParameter="Move7" Margin="2"/>
+                        <Button Grid.Row="1" Grid.Column="2" Content="→" Command="{Binding MoveCommand}" CommandParameter="Move3" Margin="2"/>
+                        <Button Grid.Row="2" Grid.Column="0" Content="↙" Command="{Binding MoveCommand}" CommandParameter="Move6" Margin="2"/>
+                        <Button Grid.Row="2" Grid.Column="1" Content="↓" Command="{Binding MoveCommand}" CommandParameter="Move5" Margin="2"/>
+                        <Button Grid.Row="2" Grid.Column="2" Content="↘" Command="{Binding MoveCommand}" CommandParameter="Move4" Margin="2"/>
+                    </Grid>
+                </GroupBox>
+
+                <GroupBox Grid.Row="1" Grid.Column="2" Header="Item ID / Hue" Margin="5">
+                    <StackPanel>
+                        <TextBlock Text="ID: {Binding ItemIDText}" Margin="0,5,0,0"/>
+                        <TextBlock Text="{Binding ItemIDDecText}" Margin="0,5,0,0"/>
+                    </StackPanel>
+                </GroupBox>
+            </Grid>
+        </Grid>
+
+        <GridSplitter Grid.Column="3" Width="5" HorizontalAlignment="Center" VerticalAlignment="Stretch"/>
+
+        <Grid Grid.Column="4">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="auto"/>
+            </Grid.RowDefinitions>
+
+            <ListView Grid.Row="0" ItemsSource="{Binding SelectedCustomItemList.Items}"
+                      SelectedItem="{Binding SelectedItemInCustomList, Mode=TwoWay}"
+                      AllowDrop="True"
+                      DragOver="CustomItemList_DragOver"
+                      Drop="CustomItemList_Drop">
+                <ListView.View>
+                    <GridView AllowsColumnReorder="True">
+                        <GridViewColumn Header="Description" DisplayMemberBinding="{Binding Description}" Width="150"/>
+                        <GridViewColumn Header="ID" DisplayMemberBinding="{Binding Id}" Width="80"/>
+                    </GridView>
+                </ListView.View>
+            </ListView>
+
+            <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="5">
+                <Button Content="New" Command="{Binding NewCustomListCommand}" Margin="0,0,5,0"/>
+                <Button Content="Save" Command="{Binding SaveCustomListCommand}" Margin="0,0,5,0"/>
+                <Button Content="Load" Command="{Binding LoadCustomListCommand}" Margin="0,0,5,0"/>
+                <Button Content="Delete" Command="{Binding DeleteFromCustomListCommand}"/>
+            </StackPanel>
+        </Grid>
+
+        <Border Grid.Column="5" BorderBrush="Black" BorderThickness="1" Margin="5">
+            <Border.Background>
+                <SolidColorBrush Color="{Binding CurrentItemBackgroundColor}"/>
+            </Border.Background>
+            <Grid>
+                <Image Source="{Binding ItemImage}" HorizontalAlignment="Center" VerticalAlignment="Center" Stretch="None" Panel.ZIndex="1"/>
+                <views:RoomViewControl Visibility="{Binding IsRoomViewEnabled, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                       ItemImageWidth="{Binding ItemImageActualWidth}"
+                                       ItemImageHeight="{Binding ItemImageActualHeight}"
+                                       XOffset="{Binding ItemImageXOffset}"
+                                       YOffset="{Binding ItemImageYOffset}"/>
+                <Image Source="{Binding LightSourceImage}"
+                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                       Panel.ZIndex="2"
+                       Visibility="{Binding IsLightSourceEnabled, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <Image.RenderTransform>
+                        <TranslateTransform Y="{Binding LightSourceTranslateY}"/>
+                    </Image.RenderTransform>
+                </Image>
+            </Grid>
+        </Border>
+
+    </Grid>
+</UserControl>

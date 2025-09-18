@@ -1,0 +1,75 @@
+<UserControl x:Class="Axis2.WPF.Views.AccountTabView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:Axis2.WPF.Views"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <GroupBox Header="Privilege Level" Grid.Column="0" Margin="5">
+            <StackPanel>
+                <RadioButton Content="Owner"/>
+                <RadioButton Content="Administrator"/>
+                <RadioButton Content="Developer"/>
+                <RadioButton Content="GM"/>
+                <RadioButton Content="Seer"/>
+                <RadioButton Content="Counselor"/>
+                <RadioButton Content="Player"/>
+                <RadioButton Content="Guest"/>
+                <Button Content="Set Priv"/>
+            </StackPanel>
+        </GroupBox>
+
+        <GroupBox Header="Resdisp" Grid.Column="1" Margin="5">
+            <StackPanel>
+                <RadioButton Content="0"/>
+                <RadioButton Content="1"/>
+                <RadioButton Content="2"/>
+                <RadioButton Content="3"/>
+                <RadioButton Content="4"/>
+                <RadioButton Content="5"/>
+                <RadioButton Content="6"/>
+                <RadioButton Content="7"/>
+                <Button Content="Set Resdisp"/>
+            </StackPanel>
+        </GroupBox>
+
+        <GroupBox Header="Privileges" Grid.Column="0" Grid.ColumnSpan="2" Margin="5" Grid.Row="1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0">
+                    <CheckBox Content="Priv 02"/>
+                    <CheckBox Content="Priv 08"/>
+                    <CheckBox Content="Priv 010"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1">
+                    <CheckBox Content="Priv 020"/>
+                    <CheckBox Content="Priv 040"/>
+                    <CheckBox Content="Priv 080"/>
+                </StackPanel>
+                <StackPanel Grid.Column="2">
+                    <CheckBox Content="Priv 0200"/>
+                    <CheckBox Content="Priv 0400"/>
+                    <CheckBox Content="Priv 0800"/>
+                </StackPanel>
+                <StackPanel Grid.Column="3">
+                    <CheckBox Content="Priv 02000"/>
+                    <CheckBox Content="Priv 04000"/>
+                    <Button Content="Set Privs"/>
+                    <Button Content="Reset Privs"/>
+                </StackPanel>
+            </Grid>
+        </GroupBox>
+    </Grid>
+</UserControl>

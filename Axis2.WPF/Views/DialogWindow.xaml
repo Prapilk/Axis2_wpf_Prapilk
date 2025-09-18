@@ -1,0 +1,8 @@
+<Window x:Class="Axis2.WPF.Views.DialogWindow" 
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
+        SizeToContent="Manual" 
+        ResizeMode="CanResize" 
+        WindowStartupLocation="CenterOwner" 
+        ShowInTaskbar="False"> 
+</Window>

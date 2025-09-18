@@ -1,0 +1,67 @@
+<UserControl x:Class="Axis2.WPF.Views.Settings.SettingsTravelTabView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:Axis2.WPF.Views.Settings"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Checkboxes -->
+        <CheckBox Content="Draw Statics" Grid.Row="0" Grid.Column="0" Margin="5"
+                  IsChecked="{Binding DrawStatics, Mode=TwoWay}"
+                  IsEnabled="{Binding ShowMap}"
+                  VerticalAlignment="Center"/>
+        <CheckBox Content="Draw Difs" Grid.Row="1" Grid.Column="0" Margin="5"
+                  IsChecked="{Binding DrawDifs, Mode=TwoWay}"
+                  IsEnabled="{Binding ShowMap}"
+                  VerticalAlignment="Center"/>
+        <CheckBox Content="Show Spawnpoints" Grid.Row="2" Grid.Column="0" Margin="5"
+                  IsChecked="{Binding ShowSpawnpoints, Mode=TwoWay}"
+                  IsEnabled="{Binding ShowMap}"
+                  VerticalAlignment="Center"/>
+        <CheckBox Content="Show Map" Grid.Row="3" Grid.Column="0" Margin="5"
+                  IsChecked="{Binding ShowMap, Mode=TwoWay}"
+                  VerticalAlignment="Center"/>
+
+        <!-- NPC Spawn Color -->
+        <TextBlock Text="NPC Spawn Color:" Grid.Row="4" Grid.Column="0" Margin="5" VerticalAlignment="Center"/>
+        <Rectangle Grid.Row="4" Grid.Column="1" Margin="5" Width="50" Height="20" Stroke="Black" StrokeThickness="1">
+            <Rectangle.Fill>
+                <SolidColorBrush Color="{Binding NPCSpawnColor, Mode=TwoWay}"/>
+            </Rectangle.Fill>
+        </Rectangle>
+        <Button Content="Select Color" Grid.Row="4" Grid.Column="2" Margin="5" Command="{Binding SelectNPCSpawnColorCommand}"
+                IsEnabled="{Binding ShowSpawnpoints}"/>
+
+        <!-- Item Spawn Color -->
+        <TextBlock Text="Item Spawn Color:" Grid.Row="5" Grid.Column="0" Margin="5" VerticalAlignment="Center"/>
+        <Rectangle Grid.Row="5" Grid.Column="1" Margin="5" Width="50" Height="20" Stroke="Black" StrokeThickness="1">
+            <Rectangle.Fill>
+                <SolidColorBrush Color="{Binding ItemSpawnColor, Mode=TwoWay}"/>
+            </Rectangle.Fill>
+        </Rectangle>
+        <Button Content="Select Color" Grid.Row="5" Grid.Column="2" Margin="5" Command="{Binding SelectItemSpawnColorCommand}"
+                IsEnabled="{Binding ShowSpawnpoints}"/>
+
+        <!-- Reset Button -->
+        <StackPanel Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
+            <Button Content="Reset Travel Settings" Command="{Binding ResetTravelSettingsCommand}" Margin="5"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

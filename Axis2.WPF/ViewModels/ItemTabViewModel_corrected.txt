@@ -1,0 +1,919 @@
+using Axis2.WPF.Models;
+using Axis2.WPF.Mvvm;
+using Axis2.WPF.Services;
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.IO;
+using System.Linq;
+using System.Windows;
+using System.Windows.Input;
+using System.Windows.Media.Imaging;
+using System.Globalization;
+using System.Threading.Tasks;
+using System.Text.Json;
+using Axis2.WPF.Extensions;
+using MessageBox = System.Windows.MessageBox;
+using Axis2.WPF.Views.Dialogs; // Added for SaveCustomListDialog
+using System.Windows.Threading; // For DispatcherTimer
+using System.Diagnostics; // For Stopwatch
+using System.Windows.Media; // For DrawingVisual, RenderTargetBitmap, TransformGroup, ScaleTransform, RotateTransform
+using System.Windows.Media.Imaging;
+
+namespace Axis2.WPF.ViewModels
+{
+    public class ItemTabViewModel : BindableBase, IHandler<ProfileLoadedEvent>
+    {
+        private const long ITEM_SPAWN_ITEM = 1;
+        private const int ATTR_INVIS = 0x0020;
+        private const int ATTR_MAGIC = 0x0040;
+        private const int ATTR_MOVE_NEVER = 0x0100;
+        private const int SPAWN_MESSAGE_DELAY = 100;
+
+        private readonly MulFileManager _mulFileManager;
+        private readonly ScriptParser _scriptParser;
+        private readonly IUoClient _uoClient;
+        private readonly EventAggregator _eventAggregator;
+        private readonly LightDataService _lightDataService;
+        private readonly UoArtService _uoArtService;
+        private readonly ISettingsService _settingsService;
+        private string _scriptsPath;
+
+        public ObservableCollection<Category> Categories { get; } = new();
+        public ObservableCollection<SObject> DisplayedItems { get; } = new();
+        public ObservableCollection<CustomItemList> CustomItemLists { get; } = new();
+
+        private object _selectedTreeItem;
+        public object SelectedTreeItem
+        {
+            get => _selectedTreeItem;
+            set
+            {
+                if (SetProperty(ref _selectedTreeItem, value))
+                {
+                    UpdateDisplayedItems();
+                }
+            }
+        }
+
+        private SObject _selectedItem;
+        public SObject SelectedItem
+        {
+            get => _selectedItem;
+            set
+            {
+                if (SetProperty(ref _selectedItem, value) && value != null)
+                {
+                    UpdateItemImage(value);
+                    OnPropertyChanged(nameof(ItemImageActualWidth));
+                    OnPropertyChanged(nameof(ItemImageActualHeight));
+                    _eventAggregator.Publish(new SObjectSelectedEvent(value));
+                }
+            }
+        }
+
+        private CustomItemList _selectedCustomItemList;
+        public CustomItemList SelectedCustomItemList
+        {
+            get => _selectedCustomItemList;
+            set => SetProperty(ref _selectedCustomItemList, value);
+        }
+
+        private BitmapSource _itemImage;
+        public BitmapSource ItemImage
+        {
+            get => _itemImage;
+            set => SetProperty(ref _itemImage, value);
+        }
+
+        public double ItemImageActualWidth => ItemImage?.PixelWidth ?? 0;
+        public double ItemImageActualHeight => ItemImage?.PixelHeight ?? 0;
+
+        public bool IsItemsVisible => _settingsItemTabViewModel?.ShowItems ?? true;
+        public System.Windows.Media.Brush CurrentItemBackgroundColor
+        {
+            get
+            {
+                var color = _settingsItemTabViewModel?.ItemBGColor ?? Colors.Transparent;
+                return new SolidColorBrush(color);
+            }
+        }
+        public bool IsRoomViewEnabled => _settingsItemTabViewModel?.RoomView ?? false;
+
+        private string _zCoordinate = "0";
+        public string ZCoordinate
+        {
+            get => _zCoordinate;
+            set => SetProperty(ref _zCoordinate, value);
+        }
+
+        private string _nukeArgument = "";
+        public string NukeArgument
+        {
+            get => _nukeArgument;
+            set => SetProperty(ref _nukeArgument, value);
+        }
+
+        private string _amount = "1";
+        public string Amount
+        {
+            get => _amount;
+            set => SetProperty(ref _amount, value);
+        }
+
+        private string _nudgeAmount = "1";
+        public string NudgeAmount
+        {
+            get => _nudgeAmount;
+            set => SetProperty(ref _nudgeAmount, value);
+        }
+
+        private bool _lockItem = false;
+        public bool LockItem
+        {
+            get => _lockItem;
+            set => SetProperty(ref _lockItem, value);
+        }
+
+        private string _minTime = "30";
+        public string MinTime
+        {
+            get => _minTime;
+            set => SetProperty(ref _minTime, value);
+        }
+
+        private string _maxTime = "240";
+        public string MaxTime
+        {
+            get => _maxTime;
+            set => SetProperty(ref _maxTime, value);
+        }
+
+        private string _spawnRate = "0";
+        public string SpawnRate
+        {
+            get => _spawnRate;
+            set => SetProperty(ref _spawnRate, value);
+        }
+
+        private string _maxDist = "0";
+        public string MaxDist
+        {
+            get => _maxDist;
+            set => SetProperty(ref _maxDist, value);
+        }
+
+        private string _itemIDText = "";
+        public string ItemIDText
+        {
+            get => _itemIDText;
+            set => SetProperty(ref _itemIDText, value);
+        }
+
+        private string _itemIDDecText = "";
+        public string ItemIDDecText
+        {
+            get => _itemIDDecText;
+            set => SetProperty(ref _itemIDDecText, value);
+        }
+
+        public ICommand CreateCommand { get; private set; }
+        public ICommand TileCommand { get; private set; }
+        public ICommand RemoveCommand { get; private set; }
+        public ICommand FlipCommand { get; private set; }
+        public ICommand NukeCommand { get; private set; }
+        public ICommand NudgeUpCommand { get; private set; }
+        public ICommand NudgeDownCommand { get; private set; }
+        public ICommand MoveCommand { get; private set; }
+        public ICommand InitSpawnCommand { get; private set; }
+        public ICommand AddItemCommand { get; private set; }
+        public ICommand EditItemCommand { get; private set; }
+        public ICommand DeleteItemCommand { get; private set; }
+        public ICommand LoadSettingsCommand { get; private set; }
+        public ICommand SaveSettingsCommand { get; private set; }
+        public ICommand ResetSettingsCommand { get; private set; }
+        public ICommand SaveCustomListCommand { get; private set; }
+        public ICommand LoadCustomListCommand { get; private set; }
+        public ICommand NewCustomListCommand { get; private set; }
+
+        private readonly Settings.SettingsItemTabViewModel _settingsItemTabViewModel;
+
+        private readonly DispatcherTimer _lightAnimationTimer;
+        private readonly Stopwatch _lightAnimationStopwatch;
+        private DrawConfigEntry _currentLightDrawConfig;
+        private double _currentLightZoom = 1.0;
+        private double _currentLightRotation = 0.0;
+        private int _currentLightColorIndex = 0;
+
+        private bool _isLightSourceEnabled;
+        public bool IsLightSourceEnabled
+        {
+            get => _isLightSourceEnabled;
+            set
+            {
+                if (SetProperty(ref _isLightSourceEnabled, value))
+                {
+                    if (value)
+                    {
+                        _lightAnimationStopwatch.Restart();
+                        _lightAnimationTimer.Start();
+                    }
+                    else
+                    {
+                        _lightAnimationTimer.Stop();
+                        _lightAnimationStopwatch.Stop();
+                    }
+                    UpdateItemImage(SelectedItem); // Re-render the image with or without light effect
+                }
+            }
+        }
+
+        public double ItemImageXOffset => 0; // Placeholder for now
+        public double ItemImageYOffset => 0; // Placeholder for now
+
+        public ItemTabViewModel(MulFileManager mulFileManager, ScriptParser scriptParser, EventAggregator eventAggregator, IUoClient uoClient, Settings.SettingsItemTabViewModel settingsItemTabViewModel, LightDataService lightDataService, UoArtService uoArtService, ISettingsService settingsService)
+        {
+            _mulFileManager = mulFileManager;
+            _scriptParser = scriptParser;
+            _uoClient = uoClient;
+            _eventAggregator = eventAggregator;
+            _lightDataService = lightDataService;
+            _uoArtService = uoArtService;
+            _settingsService = settingsService;
+            _eventAggregator.Subscribe(this);
+
+            // Initialize timer and stopwatch
+            _lightAnimationTimer = new DispatcherTimer();
+            _lightAnimationTimer.Interval = TimeSpan.FromMilliseconds(50); // 20 FPS
+            _lightAnimationTimer.Tick += LightAnimationTimer_Tick;
+            _lightAnimationStopwatch = new Stopwatch();
+
+            CreateCommand = new RelayCommand(OnCreate);
+            TileCommand = new RelayCommand(OnTile);
+            RemoveCommand = new RelayCommand(OnRemove);
+            FlipCommand = new RelayCommand(OnFlip);
+            NukeCommand = new RelayCommand(OnNuke);
+            NudgeUpCommand = new RelayCommand(OnNudgeUp);
+            NudgeDownCommand = new RelayCommand(OnNudgeDown);
+            MoveCommand = new RelayCommand<string>(OnMove);
+            InitSpawnCommand = new RelayCommand(OnInitSpawn);
+            AddItemCommand = new RelayCommand(OnAddItem);
+            EditItemCommand = new RelayCommand(OnEditItem, CanEditDeleteItem);
+            DeleteItemCommand = new RelayCommand(OnDeleteItem, CanEditDeleteItem);
+            LoadSettingsCommand = new RelayCommand(OnLoadSettings);
+            SaveSettingsCommand = new RelayCommand(OnSaveSettings);
+            ResetSettingsCommand = new RelayCommand(OnResetSettings);
+            SaveCustomListCommand = new RelayCommand(OnSaveCustomList);
+            LoadCustomListCommand = new RelayCommand(OnLoadCustomList);
+            NewCustomListCommand = new RelayCommand(OnNewCustomList);
+
+            _settingsItemTabViewModel = settingsItemTabViewModel;
+
+            // Initialize _settingsItemTabViewModel from SettingsService
+            var loadedSettings = _settingsService.LoadSettings();
+            _settingsItemTabViewModel = loadedSettings?.ItemTabSettings ?? new Settings.SettingsItemTabViewModel();
+
+            // Subscribe to SettingsChanged event from SettingsService
+            _settingsService.SettingsChanged += (s, e) =>
+            {
+                if (e.PropertyName == nameof(AllSettings.ItemTabSettings))
+                {
+                    _settingsItemTabViewModel = e.AllSettings.ItemTabSettings;
+                    OnPropertyChanged(nameof(IsItemsVisible));
+                    OnPropertyChanged(nameof(CurrentItemBackgroundColor));
+                    OnPropertyChanged(nameof(IsRoomViewEnabled));
+                }
+            };
+
+            // Also subscribe to PropertyChanged on _settingsItemTabViewModel itself for direct changes
+            _settingsItemTabViewModel.PropertyChanged += (s, e) =>
+            {
+                if (e.PropertyName == nameof(Settings.SettingsItemTabViewModel.ShowItems))
+                {
+                    OnPropertyChanged(nameof(IsItemsVisible));
+                }
+                else if (e.PropertyName == nameof(Settings.SettingsItemTabViewModel.ItemBGColor))
+                {
+                    OnPropertyChanged(nameof(CurrentItemBackgroundColor));
+                }
+                else if (e.PropertyName == nameof(Settings.SettingsItemTabViewModel.RoomView))
+                {
+                    OnPropertyChanged(nameof(IsRoomViewEnabled));
+                }
+            };
+        }
+
+        private void OnAddItem()
+        {
+            MessageBox.Show("Add Item button clicked!");
+        }
+
+        private void OnEditItem()
+        {
+            MessageBox.Show("Edit Item button clicked!");
+        }
+
+        private void OnDeleteItem()
+        {
+            if (SelectedItem == null) return;
+
+            var result = MessageBox.Show($"Are you sure you want to delete '{SelectedItem.Description}'?", "Confirm Delete", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                // Remove from DisplayedItems
+                DisplayedItems.Remove(SelectedItem);
+
+                // Also remove from the Categories structure
+                foreach (var category in Categories)
+                {
+                    foreach (var subCategory in category.SubSections)
+                    {
+                        if (subCategory.Items.Contains(SelectedItem))
+                        {
+                            subCategory.Items.Remove(SelectedItem);
+                            break;
+                        }
+                    }
+                }
+                SelectedItem = null; // Clear selection after deletion
+            }
+        }
+
+        private void OnLoadSettings()
+        {
+            try
+            {
+                string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "items.json");
+                if (File.Exists(filePath))
+                {
+                    string jsonString = File.ReadAllText(filePath);
+                    var loadedCategories = JsonSerializer.Deserialize<ObservableCollection<Category>>(jsonString);
+                    if (loadedCategories != null)
+                    {
+                        Categories.Clear();
+                        foreach (var category in loadedCategories)
+                        {
+                            Categories.Add(category);
+                        }
+                        UpdateDisplayedItems(); // Refresh displayed items after loading
+                        MessageBox.Show("Items loaded successfully!", "Load Settings");
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("items.json not found.", "Load Settings");
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error loading items: {ex.Message}", "Load Settings Error");
+            }
+        }
+
+        private void OnSaveSettings()
+        {
+            try
+            {
+                string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "items.json");
+                var options = new JsonSerializerOptions { WriteIndented = true };
+                string jsonString = JsonSerializer.Serialize(Categories, options);
+                File.WriteAllText(filePath, jsonString);
+                MessageBox.Show("Items saved successfully!", "Save Settings");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error saving items: {ex.Message}", "Save Settings Error");
+            }
+        }
+
+        private void OnResetSettings()
+        {
+            var result = MessageBox.Show("Are you sure you want to reset all item settings? This cannot be undone.", "Confirm Reset", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                Categories.Clear();
+                DisplayedItems.Clear();
+                ItemImage = null;
+                MessageBox.Show("Item settings have been reset.", "Reset Settings");
+            }
+        }
+
+        private bool CanEditDeleteItem()
+        {
+            return SelectedItem != null;
+        }
+
+        private void OnCreate()
+        {
+            if (SelectedItem == null)
+            {
+                //System.Windows.MessageBox.Show("No item selected.", "Error");
+                return;
+            }
+            string command = LockItem ? $"static {SelectedItem.Id}" : $"add {SelectedItem.Id}";
+            _uoClient.SendToClient(command);
+        }
+
+        private void OnTile()
+        {
+            if (SelectedItem == null)
+            {
+                //System.Windows.MessageBox.Show("No item selected.", "Error");
+                return;
+            }
+            string command = $"tile {ZCoordinate} {SelectedItem.Id}";
+            _uoClient.SendToClient(command);
+        }
+
+        private void OnRemove()
+        {
+            _uoClient.SendToClient("remove");
+        }
+
+        private void OnFlip()
+        {
+            _uoClient.SendToClient("xflip");
+        }
+
+        private void OnNuke()
+        {
+            string command = $"nuke {NukeArgument}";
+            _uoClient.SendToClient(command);
+        }
+
+        private void OnNudgeUp()
+        {
+            string command = $"nudgeup {NudgeAmount}";
+            _uoClient.SendToClient(command);
+        }
+
+        private void OnNudgeDown()
+        {
+            string command = $"nudgedown {NudgeAmount}";
+            _uoClient.SendToClient(command);
+        }
+
+        private void OnMove(string moveDirection)
+        {
+            string command = "";
+            string moveValue = NudgeAmount;
+            if (string.IsNullOrEmpty(moveValue))
+                moveValue = "0";
+
+            switch (moveDirection)
+            {
+                case "Move1": // Up
+                    command = $"xmove 0 -{moveValue}";
+                    break;
+                case "Move2": // Up-Right
+                    command = $"xmove {moveValue} -{moveValue}";
+                    break;
+                case "Move3": // Right
+                    command = $"xmove {moveValue} 0";
+                    break;
+                case "Move4": // Down-Right
+                    command = $"xmove {moveValue} {moveValue}";
+                    break;
+                case "Move5": // Down
+                    command = $"xmove 0 {moveValue}";
+                    break;
+                case "Move6": // Down-Left
+                    command = $"xmove -{moveValue} {moveValue}";
+                    break;
+                case "Move7": // Left
+                    command = $"xmove -{moveValue} 0";
+                    break;
+                case "Move8": // Up-Left
+                    command = $"xmove -{moveValue} -{moveValue}";
+                    break;
+            }
+            _uoClient.SendToClient(command);
+        }
+
+        private async void OnInitSpawn()
+        {
+            if (SelectedItem == null)
+            {
+                MessageBox.Show("No item is selected.", "Error", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                return;
+            }
+
+            if (!int.TryParse(Amount, out int iAmount))
+            {
+                iAmount = 1;
+            }
+            if (iAmount == 0)
+            {
+                iAmount = 1;
+            }
+
+            if (!int.TryParse(MaxDist, out int iMaxDist))
+            {
+                iMaxDist = 0;
+            }
+
+            if (!int.TryParse(MinTime, out int iMinTime))
+            {
+                iMinTime = 30; // Default from C++ example
+            }
+
+            if (!int.TryParse(MaxTime, out int iMaxTime))
+            {
+                iMaxTime = 240; // Default from C++ example
+            }
+
+            if (iMaxTime <= iMinTime)
+            {
+                iMaxTime = iMinTime + 1;
+            }
+
+            // This logic combines the "Place" approach (using a temporary worldgem)
+            // with the correct command sequence for item spawners.
+            await Task.Delay(SPAWN_MESSAGE_DELAY);
+            _uoClient.SendToClient("add 01ea7"); // Add the "worldgem" to mark the location.
+
+            // Add delays to ensure the server processes the "add" command before we continue.
+            await Task.Delay(SPAWN_MESSAGE_DELAY);
+            await Task.Delay(SPAWN_MESSAGE_DELAY);
+
+            // Countdown for manual placement confirmation
+            for (double i = 3.0; i >= 0.0; i -= 0.5)
+            {
+                _uoClient.SendToClient($"hear {i:F1}"); // Send countdown message
+                await Task.Delay(250);
+            }
+
+            _uoClient.SendToClient($"act.type {ITEM_SPAWN_ITEM}");
+            await Task.Delay(SPAWN_MESSAGE_DELAY);
+
+            _uoClient.SendToClient($"act.amount {iAmount}");
+            await Task.Delay(SPAWN_MESSAGE_DELAY);
+
+            // Use the string ID for items, not the numeric conversion.
+            _uoClient.SendToClient($"act.more {SelectedItem.Id}");
+            await Task.Delay(SPAWN_MESSAGE_DELAY);
+
+            // Re-add the essential "more2" command for the spawn rate.
+            _uoClient.SendToClient($"act.more2 {SpawnRate}");
+            await Task.Delay(SPAWN_MESSAGE_DELAY);
+
+            _uoClient.SendToClient($"act.morep {iMinTime} {iMaxTime} {iMaxDist}");
+            await Task.Delay(SPAWN_MESSAGE_DELAY);
+
+            _uoClient.SendToClient($"act.attr {ATTR_INVIS | ATTR_MAGIC | ATTR_MOVE_NEVER:X4}");
+            await Task.Delay(SPAWN_MESSAGE_DELAY);
+
+            _uoClient.SendToClient($"act.timer 1");
+        }
+
+        private void OnSaveCustomList()
+        {
+            var dialog = new SaveCustomListDialog();
+            if (dialog.ShowDialog() == true)
+            {
+                string listName = dialog.ListName;
+                if (string.IsNullOrWhiteSpace(listName))
+                {
+                    MessageBox.Show("List name cannot be empty.", "Save Custom List", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                // If no custom list is selected, create a new one
+                if (SelectedCustomItemList == null)
+                {
+                    SelectedCustomItemList = new CustomItemList { Name = listName };
+                    CustomItemLists.Add(SelectedCustomItemList);
+                }
+                else
+                {
+                    // If a list is selected, update its name if it was changed
+                    SelectedCustomItemList.Name = listName;
+                }
+
+                try
+                {
+                    string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"{listName}.json");
+                    var options = new JsonSerializerOptions { WriteIndented = true };
+                    string jsonString = JsonSerializer.Serialize(SelectedCustomItemList, options);
+                    File.WriteAllText(filePath, jsonString);
+                    MessageBox.Show($"Custom list '{listName}' saved successfully!", "Save Custom List");
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error saving custom list: {ex.Message}", "Save Custom List Error");
+                }
+            }
+        }
+
+        private void OnNewCustomList()
+        {
+            // Create a new empty custom list and set it as selected
+            var newCustomList = new CustomItemList { Name = "New Custom List" }; // Default name
+            CustomItemLists.Add(newCustomList);
+            SelectedCustomItemList = newCustomList;
+            MessageBox.Show("New custom list created. You can now drag items into it.", "New Custom List", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+        }
+
+        private void OnLoadCustomList()
+        {
+            var dialog = new LoadCustomListDialog();
+            if (dialog.ShowDialog() == true)
+            {
+                string listName = dialog.SelectedListName;
+                if (string.IsNullOrWhiteSpace(listName))
+                {
+                    MessageBox.Show("No list selected.", "Load Custom List", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                    return;
+                }
+
+                try
+                {
+                    string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"{listName}.json");
+                    if (File.Exists(filePath))
+                    {
+                        string jsonString = File.ReadAllText(filePath);
+                        var loadedList = JsonSerializer.Deserialize<CustomItemList>(jsonString);
+                        if (loadedList != null)
+                        {
+                            // Check if the list already exists in CustomItemLists collection
+                            var existingList = CustomItemLists.FirstOrDefault(l => l.Name == loadedList.Name);
+                            if (existingList != null)
+                            {
+                                // Update existing list
+                                existingList.Items.Clear();
+                                foreach (var item in loadedList.Items)
+                                {
+                                    existingList.Items.Add(item);
+                                }
+                                SelectedCustomItemList = existingList;
+                            }
+                            else
+                            {
+                                // Add new list
+                                CustomItemLists.Add(loadedList);
+                                SelectedCustomItemList = loadedList;
+                            }
+                            MessageBox.Show($"Custom list '{listName}' loaded successfully!", "Load Custom List");
+                        }
+                    }
+                    else
+                    {
+                        MessageBox.Show($"File '{listName}.json' not found.", "Load Custom List", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error loading custom list: {ex.Message}", "Load Custom List Error");
+                }
+            }
+        }
+
+        public void Handle(ProfileLoadedEvent message)
+        {
+            _scriptsPath = message.LoadedProfile.BaseDirectory;
+            LoadScripts();
+        }
+
+        private void LoadScripts()
+        {
+            Categories.Clear();
+            DisplayedItems.Clear();
+            ItemImage = null;
+
+            if (string.IsNullOrEmpty(_scriptsPath) || !Directory.Exists(_scriptsPath))
+            {
+                // Maybe add a single "category" with a message like "Script directory not found"
+                return;
+            }
+
+            var allItems = new List<SObject>();
+            var scriptFiles = Directory.GetFiles(_scriptsPath, "*.scp", SearchOption.AllDirectories);
+
+            foreach (var file in scriptFiles)
+            {
+                allItems.AddRange(_scriptParser.ParseFile(file));
+            }
+
+            var itemDefs = allItems.Where(item => item.Type == SObjectType.Item).ToList();
+            var categorizedItems = _scriptParser.Categorize(itemDefs);
+
+            foreach (var category in categorizedItems)
+            {
+                Categories.Add(category);
+            }
+        }
+
+        private void UpdateDisplayedItems()
+        {
+            DisplayedItems.Clear();
+            ItemImage = null;
+
+            if (SelectedTreeItem is SubCategory subCategory)
+            {
+                foreach (var item in subCategory.Items)
+                {
+                    DisplayedItems.Add(item);
+                }
+            }
+        }
+
+        private void UpdateItemImage(SObject item)
+        {
+            if (item == null)
+            {
+                ItemImage = null;
+                ItemIDText = "";
+                ItemIDDecText = "";
+                return;
+            }
+
+            string idString = item.DisplayId ?? item.Id;
+            uint itemId = idString.AllToUInt();
+
+            if (itemId > 0)
+            {
+                var tileDataItem = _lightDataService.TileDataItems.FirstOrDefault(tdi => tdi.Id == itemId);
+                uint finalArtId = itemId;
+                if (tileDataItem != null && tileDataItem.AnimId > 0)
+                {
+                    finalArtId = (uint)tileDataItem.AnimId;
+                }
+
+                int hue = 0;
+                if (!string.IsNullOrEmpty(item.Color) && item.Color.StartsWith("0x"))
+                {
+                    int.TryParse(item.Color.Substring(2), System.Globalization.NumberStyles.HexNumber, null, out hue);
+                }
+
+                ItemIDText = $"0x{itemId:X}";
+                ItemIDDecText = $"ID:{itemId}    Hue:0x{hue:X}";
+
+                var artRecord = _mulFileManager.GetArtRecord(finalArtId);
+                BitmapSource baseItemImage = null;
+
+                if (artRecord != null)
+                {
+                    baseItemImage = _mulFileManager.CreateBitmapSource(artRecord, hue);
+                }
+
+                // --- Light Source Logic ---
+                if (IsLightSourceEnabled && tileDataItem != null && (tileDataItem.Flags & 0x00800000) != 0) // Check for lightsource flag
+                {
+                    // Attempt to find the corresponding LightColor and DrawConfigEntry
+                    var lightColorEntry = _lightDataService.LightColors.Values.FirstOrDefault(lc => lc.Id == itemId);
+                    if (lightColorEntry != null)
+                    {
+                        _currentLightDrawConfig = _lightDataService.DrawConfigs.FirstOrDefault(dc => dc.Id == lightColorEntry.DrawConfigId);
+
+                        ushort lightId = tileDataItem.LightID; // Assuming TileDataItem has a LightID property
+                        ushort colorId = 0;
+
+                        if (_currentLightDrawConfig != null && _currentLightDrawConfig.ColorIds.Any())
+                        {
+                            colorId = _currentLightDrawConfig.ColorIds[_currentLightColorIndex]; // Use current color index
+                        }
+
+                        if (lightId > 0) // Only try to get light image if a valid lightId is found
+                        {
+                            BitmapSource lightImage = _uoArtService.GetLightImage(lightId, colorId);
+
+                            if (baseItemImage != null && lightImage != null)
+                            {
+                                // Combine images
+                                DrawingVisual drawingVisual = new DrawingVisual();
+                                using (DrawingContext drawingContext = drawingVisual.RenderOpen())
+                                {
+                                    // Draw base item image
+                                    drawingContext.DrawImage(baseItemImage, new Rect(0, 0, baseItemImage.PixelWidth, baseItemImage.PixelHeight));
+
+                                    // Apply transformations to light image
+                                    TransformGroup transformGroup = new TransformGroup();
+                                    transformGroup.Children.Add(new ScaleTransform(_currentLightZoom, _currentLightZoom, lightImage.PixelWidth / 2, lightImage.PixelHeight / 2));
+                                    transformGroup.Children.Add(new RotateTransform(_currentLightRotation, lightImage.PixelWidth / 2, lightImage.PixelHeight / 2));
+                                    drawingContext.PushTransform(transformGroup);
+
+                                    // Draw light image on top
+                                    drawingContext.DrawImage(lightImage, new Rect(0, 0, lightImage.PixelWidth, lightImage.PixelHeight));
+                                    drawingContext.Pop(); // Pop the transform
+
+                                }
+
+                                RenderTargetBitmap renderTargetBitmap = new RenderTargetBitmap(
+                                    Math.Max(baseItemImage.PixelWidth, lightImage.PixelWidth),
+                                    Math.Max(baseItemImage.PixelHeight, lightImage.PixelHeight),
+                                    96, 96, PixelFormats.Pbgra32);
+                                renderTargetBitmap.Render(drawingVisual);
+
+                                ItemImage = renderTargetBitmap;
+                            }
+                            else if (lightImage != null)
+                            {
+                                // If no base item image, just show light with transformations
+                                DrawingVisual drawingVisual = new DrawingVisual();
+                                using (DrawingContext drawingContext = drawingVisual.RenderOpen())
+                                {
+                                    TransformGroup transformGroup = new TransformGroup();
+                                    transformGroup.Children.Add(new ScaleTransform(_currentLightZoom, _currentLightZoom, lightImage.PixelWidth / 2, lightImage.PixelHeight / 2));
+                                    transformGroup.Children.Add(new RotateTransform(_currentLightRotation, lightImage.PixelWidth / 2, lightImage.PixelHeight / 2));
+                                    drawingContext.PushTransform(transformGroup);
+                                    drawingContext.DrawImage(lightImage, new Rect(0, 0, lightImage.PixelWidth, lightImage.PixelHeight));
+                                    drawingContext.Pop();
+                                }
+                                RenderTargetBitmap renderTargetBitmap = new RenderTargetBitmap(
+                                    lightImage.PixelWidth, lightImage.PixelHeight, 96, 96, PixelFormats.Pbgra32);
+                                renderTargetBitmap.Render(drawingVisual);
+                                ItemImage = renderTargetBitmap;
+                            }
+                            else
+                            {
+                                ItemImage = baseItemImage; // Fallback to base item image if light image fails
+                            }
+                        }
+                        else
+                        {
+                            ItemImage = baseItemImage; // Fallback if lightId is not found
+                        }
+                    }
+                    else
+                    {
+                        ItemImage = baseItemImage; // No light effect
+                    }
+                }
+                else
+                {
+                    ItemImage = baseItemImage; // No light effect
+                }
+            }
+            else
+            {
+                ItemImage = null;
+                ItemIDText = "";
+                ItemIDDecText = "";
+            }
+        }
+
+        public void FilterItems(string searchTerm)
+        {
+            if (string.IsNullOrWhiteSpace(searchTerm))
+            {
+                UpdateDisplayedItems();
+                return;
+            }
+
+            DisplayedItems.Clear();
+            var allItems = Categories.SelectMany(c => c.SubSections.SelectMany(s => s.Items));
+
+            var filteredItems = allItems.Where(item =>
+                (item.Description?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (item.Id?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false));
+
+            foreach (var item in filteredItems)
+            {
+                DisplayedItems.Add(item);
+            }
+        }
+
+        private void LightAnimationTimer_Tick(object sender, EventArgs e)
+        {
+            if (_currentLightDrawConfig == null) return;
+
+            float elapsedTime = (float)_lightAnimationStopwatch.Elapsed.TotalSeconds;
+
+            // Color alternation
+            if (_currentLightDrawConfig.Alternance > 0 && _currentLightDrawConfig.ColorIds.Count > 1)
+            {
+                int newIndex = (int)(elapsedTime / _currentLightDrawConfig.Alternance) % _currentLightDrawConfig.ColorIds.Count;
+                if (newIndex != _currentLightColorIndex)
+                {
+                    _currentLightColorIndex = newIndex;
+                    UpdateItemImage(SelectedItem); // Re-render to update color
+                }
+            }
+
+            // Zoom
+            if (_currentLightDrawConfig.TimeZoom > 0)
+            {
+                _currentLightZoom = _currentLightDrawConfig.Dezoom + ((_currentLightDrawConfig.Zoom - _currentLightDrawConfig.Dezoom) / 2) * (0.5f * (1 + Math.Sin(elapsedTime * _currentLightDrawConfig.TimeZoom)));
+            }
+            else
+            {
+                _currentLightZoom = _currentLightDrawConfig.Zoom;
+            }
+            if (_currentLightZoom < _currentLightDrawConfig.Dezoom)
+            {
+                _currentLightZoom = _currentLightZoom;
+            }
+
+            // Rotation
+            if (_currentLightDrawConfig.Rotation > 0)
+            {
+                _currentLightRotation = (elapsedTime / _currentLightDrawConfig.Rotation) * 360.0f;
+            }
+
+            // Re-render the image with updated transformations
+            UpdateItemImage(SelectedItem);
+        }
+    }
+}

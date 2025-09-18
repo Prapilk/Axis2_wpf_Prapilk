@@ -1,0 +1,95 @@
+<UserControl x:Class="Axis2.WPF.Views.TravelTab"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:models="clr-namespace:Axis2.WPF.Models"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <!-- DataTemplate for RegionGroup (top level in TreeView) -->
+        <HierarchicalDataTemplate DataType="{x:Type models:RegionGroup}" ItemsSource="{Binding Areas}">
+            <TextBlock Text="{Binding Name}"/>
+        </HierarchicalDataTemplate>
+
+        <!-- DataTemplate for AreaDefinition (nested under RegionGroup) -->
+        <HierarchicalDataTemplate DataType="{x:Type models:AreaDefinition}" ItemsSource="{Binding Rooms}">
+            <TextBlock Text="{Binding Name}"/>
+        </HierarchicalDataTemplate>
+
+        <!-- DataTemplate for RoomDefinition (nested under AreaDefinition) -->
+        <DataTemplate DataType="{x:Type models:RoomDefinition}">
+            <TextBlock Text="{Binding Name}"/>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/> <!-- Map controls (dropdown, zoom) -->
+            <RowDefinition Height="*"/>   <!-- Main content (Regions, Map, Details) -->
+            <RowDefinition Height="Auto"/> <!-- Action buttons -->
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="200"/> <!-- Regions TreeView -->
+            <ColumnDefinition Width="*"/>   <!-- Map Display -->
+            <ColumnDefinition Width="200"/> <!-- Details Panel -->
+        </Grid.ColumnDefinitions>
+
+        <!-- Map Controls (Row 0) -->
+        <StackPanel Grid.Row="0" Grid.ColumnSpan="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin="5">
+            <TextBlock Text="Map Plane: " VerticalAlignment="Center" Margin="0,0,5,0"/>
+            <ComboBox Width="80" ItemsSource="{Binding AvailableMaps}" SelectedValue="{Binding SelectedMapFile}" Margin="0,0,10,0"/>
+            <Button Content="Zoom In" Margin="5,0" Command="{Binding ZoomInCommand}"/>
+            <Button Content="Zoom Out" Margin="5,0" Command="{Binding ZoomOutCommand}"/>
+        </StackPanel>
+
+        <!-- Regions TreeView (Row 1, Column 0) -->
+        <Border Grid.Row="1" Grid.Column="0" BorderBrush="Black" BorderThickness="1" Margin="5">
+            <TreeView ItemsSource="{Binding RegionGroups}" SelectedItemChanged="RegionsTreeView_SelectedItemChanged"/>
+        </Border>
+
+        <!-- Map Display Area (Row 1, Column 1) -->
+        <Border Grid.Row="1" Grid.Column="1" BorderBrush="Black" BorderThickness="1" Margin="5">
+            <Image x:Name="TravelMapImage" Source="{Binding MapImage}" Stretch="Uniform"/>
+        </Border>
+
+        <!-- Details Panel (Row 1, Column 2) -->
+        <Border Grid.Row="1" Grid.Column="2" BorderBrush="Black" BorderThickness="1" Margin="5">
+            <StackPanel Margin="10">
+                <TextBlock Text="Region Details" FontWeight="Bold" Margin="0,0,0,10"/>
+                <StackPanel Orientation="Horizontal" Margin="0,2">
+                    <TextBlock Text="Name: " FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding CurrentRegionName}"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,2">
+                    <TextBlock Text="Map: " FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding CurrentRegionMap}"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,2">
+                    <TextBlock Text="X: " FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding CurrentRegionX}"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,2">
+                    <TextBlock Text="Y: " FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding CurrentRegionY}"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,2">
+                    <TextBlock Text="Z: " FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding CurrentRegionZ}"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Action Buttons (Row 2) -->
+        <StackPanel Grid.Row="2" Grid.ColumnSpan="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin="5">
+            <Button Content="World Map" Margin="5" Command="{Binding ShowMapCommand}"/>
+            <Button Content="Locate" Margin="5" Command="{Binding LocateCommand}"/>
+            <Button Content="Track" Margin="5" Command="{Binding TrackCommand}"/>
+            <Button Content="Go" Margin="5" Command="{Binding GoCommand}"/>
+            <Button Content="Send" Margin="5" Command="{Binding SendCommand}"/>
+            <Button Content="Where" Margin="5" Command="{Binding WhereCommand}"/>
+            <Button Content="Recall" Margin="5" Command="{Binding RecallCommand}"/>
+            <Button Content="Gate" Margin="5" Command="{Binding GateCommand}"/>
+        </StackPanel>
+    </Grid>
+</UserControl>
