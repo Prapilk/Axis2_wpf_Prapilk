@@ -1,6 +1,7 @@
 Bonjour à tous,
 TOUJOURS LANCER AXIS EN MODE ADMINISTRATEUR ! Sinon les commandes client vers Orion ne fonctionneront pas !
-l'avis2 de https://github.com/DavideRei/Axis2/tree/master/release    ne fonctionnait pas pour une partie de l'équipe du shard sur lequel je travaille.
+
+L'avis2 de https://github.com/DavideRei/Axis2/tree/master/release    ne fonctionnait pas pour une partie de l'équipe du shard sur lequel je travaille.
 De plus l'axis2 avait une résolution inadapté aux besoins actuels.
 J'ai donc repris le même visuel mais refait le tout en .net 9.0  et en WPF.
 Il est adapté aux particularités du shard "UOResistance" mais il devrait fournir une bonne base pour tout ceux qui souhaite un outil SphereX puissant.
