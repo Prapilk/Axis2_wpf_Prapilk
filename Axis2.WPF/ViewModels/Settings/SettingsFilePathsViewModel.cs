@@ -100,7 +100,7 @@ namespace Axis2.WPF.ViewModels.Settings
         {
             if (!string.IsNullOrEmpty(DefaultClientPath) && File.Exists(DefaultClientPath))
             {
-                DefaultMulPath = Path.GetDirectoryName(DefaultClientPath) + "";
+                DefaultMulPath = Path.GetDirectoryName(DefaultClientPath) + "\\";
                 UpdateMulPaths(DefaultMulPath);
             }
         }
@@ -141,7 +141,7 @@ namespace Axis2.WPF.ViewModels.Settings
             FolderBrowserDialog folderBrowserDialog = new FolderBrowserDialog();
             if (folderBrowserDialog.ShowDialog(new Wpf32Window(System.Windows.Application.Current.MainWindow)) == DialogResult.OK)
             {
-                DefaultMulPath = folderBrowserDialog.SelectedPath + "";
+                DefaultMulPath = folderBrowserDialog.SelectedPath + "\\";
                 UpdateMulPaths(DefaultMulPath);
             }
         }
