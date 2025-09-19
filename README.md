@@ -17,7 +17,7 @@ Il est adapté aux particularités du shard "UOResistance" mais il devrait fourn
 * Open Light Wizard est complètement spécifique à UORESISTANCE, donc inutilisable.
 * Les attributes fonctionnent mais le reste n'est pas implémenté pour le moment.
 
-* L'onglet SPAWN lis parfaitement les animations .uop et .mul.
+* L'onglet SPAWN lis parfaitement les animations .uop et .mul. (rappel: Il faut rajouter le Zlib64.dll dans son build pour pouvoir lire les animations des .uop)
 * Le Place fait aussi tout et donc le INIT est inutile. Il prends également en charge le hue du body.def. Normalement vous devriez voir parfaitement l'ensemble.
 * (Je suis content car j'ai voulu honoré PUNT qui malheureusement ne donne plus signe de vie et qui était un pro des .uop et des fichiers UO en général ! )
 * Le SPAWN comprends donc parfaitement le parsing des scripts SphereX avec les liens body.def, mobtypes et bodyconv.
