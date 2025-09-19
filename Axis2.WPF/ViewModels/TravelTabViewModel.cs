@@ -870,6 +870,7 @@ namespace Axis2.WPF.ViewModels
                 viewModel.FromRect(SelectedRect);
 
                 var window = new Views.Travel.AddEditRectWindow() { DataContext = viewModel };
+                window.Owner = System.Windows.Application.Current.MainWindow;
 
                 if (window.ShowDialog() == true)
                 {
@@ -966,6 +967,7 @@ namespace Axis2.WPF.ViewModels
         private void ShowMap()
         {
             var window = new Axis2.WPF.Travel.WorldMapView();
+            window.Owner = System.Windows.Application.Current.MainWindow;
             window.Show();
         }
 
@@ -1000,6 +1002,7 @@ namespace Axis2.WPF.ViewModels
             var allRooms = RegionGroups.SelectMany(g => g.Areas.SelectMany(a => a.Rooms)).Concat(RegionGroups.SelectMany(g => g.Rooms));
             var findViewModel = new Travel.FindAreaViewModel(allRooms);
             var findWindow = new Axis2.WPF.Travel.FindArea(findViewModel);
+            findWindow.Owner = System.Windows.Application.Current.MainWindow;
 
             if (findWindow.ShowDialog() == true && findViewModel.SelectedRoom != null)
             {
@@ -1347,6 +1350,7 @@ namespace Axis2.WPF.ViewModels
             // Pass RegionGroups directly instead of sortedGroups
             var viewModel = new Travel.AddEditRoomViewModel(RegionGroups, AvailableMaps, drawnRect);
             var window = new Views.Travel.AddEditRoomWindow(viewModel);
+            window.Owner = System.Windows.Application.Current.MainWindow;
 
             if (window.ShowDialog() == true)
             {
@@ -1453,6 +1457,7 @@ namespace Axis2.WPF.ViewModels
             viewModel.Name = originalName; // Pass the original name
 
             var window = new Views.Travel.AddEditRectWindow() { DataContext = viewModel };
+            window.Owner = System.Windows.Application.Current.MainWindow;
 
             if (window.ShowDialog() == true)
             {

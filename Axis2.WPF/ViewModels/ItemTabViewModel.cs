@@ -509,6 +509,7 @@ namespace Axis2.WPF.ViewModels
         private void OnSaveCustomList()
         {
             var dialog = new SaveCustomListDialog();
+            dialog.Owner = System.Windows.Application.Current.MainWindow;
             if (dialog.ShowDialog() == true)
             {
                 string listName = dialog.ListName;
@@ -570,6 +571,7 @@ namespace Axis2.WPF.ViewModels
         private void OnLoadCustomList()
         {
             var dialog = new LoadCustomListDialog();
+            dialog.Owner = System.Windows.Application.Current.MainWindow;
             if (dialog.ShowDialog() == true)
             {
                 string listName = dialog.SelectedListName;

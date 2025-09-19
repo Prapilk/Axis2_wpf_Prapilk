@@ -4,6 +4,10 @@ using System.Windows.Media;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Text.Json.Serialization;
+using System.Windows.Interop;
+using System.Windows;
+using System;
+using Axis2.WPF.ViewModels;
 
 namespace Axis2.WPF.ViewModels.Settings
 {
@@ -42,7 +46,7 @@ namespace Axis2.WPF.ViewModels.Settings
         private void SelectSpawnBGColor()
         {
             ColorDialog colorDialog = new ColorDialog();
-            if (colorDialog.ShowDialog() == DialogResult.OK)
+            if (colorDialog.ShowDialog(new Wpf32Window(System.Windows.Application.Current.MainWindow)) == DialogResult.OK)
             {
                 SpawnBGColor = System.Windows.Media.Color.FromArgb(colorDialog.Color.A, colorDialog.Color.R, colorDialog.Color.G, colorDialog.Color.B);
             }

@@ -45,6 +45,7 @@ namespace Axis2.WPF.Services
                 window.Content = viewContent;
                 window.DataContext = viewModel;
                 window.Title = dialogViewModel.Title;
+                window.Owner = System.Windows.Application.Current.MainWindow;
 
                 dialogViewModel.CloseRequested += (sender, args) =>
                 {

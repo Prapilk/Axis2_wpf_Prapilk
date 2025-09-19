@@ -6,6 +6,7 @@ using Axis2.WPF.Services;
 using Microsoft.Win32;
 using System.Linq;
 using System;
+using System.Windows.Interop;
 
 namespace Axis2.WPF.ViewModels
 {
@@ -213,7 +214,7 @@ namespace Axis2.WPF.ViewModels
                     dialog.SelectedPath = SelectedProfile.BaseDirectory;
                 }
 
-                System.Windows.Forms.DialogResult result = dialog.ShowDialog();
+                System.Windows.Forms.DialogResult result = dialog.ShowDialog(new Wpf32Window(System.Windows.Application.Current.MainWindow));
 
                 if (result == System.Windows.Forms.DialogResult.OK)
                 {
@@ -299,6 +300,16 @@ namespace Axis2.WPF.ViewModels
             Logger.Log($"DEBUG: ProfilesTabViewModel - Scripts to save: {string.Join(", ", SelectedProfile.SelectedScripts.Select(s => s.Path))}");
             _profileService.SaveProfiles(Profiles); // Save all profiles after script selection changes
             Logger.Log($"DEBUG: ProfilesTabViewModel - Scripts saved for {SelectedProfile.Name}: {string.Join(", ", SelectedProfile.SelectedScripts.Select(s => s.Path))}");
+        }
+    }
+
+    public class Wpf32Window : System.Windows.Forms.IWin32Window
+    {
+        public IntPtr Handle { get; private set; }
+
+        public Wpf32Window(System.Windows.Window wpfWindow)
+        {
+            Handle = new WindowInteropHelper(wpfWindow).Handle;
         }
     }
 }

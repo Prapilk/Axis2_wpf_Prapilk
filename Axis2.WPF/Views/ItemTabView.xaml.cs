@@ -33,6 +33,7 @@ namespace Axis2.WPF.Views
             if (DataContext is ItemTabViewModel viewModel)
             {
                 var findWindow = new FindWindow(viewModel.GetUniqueScriptTypes());
+                findWindow.Owner = System.Windows.Application.Current.MainWindow;
                 findWindow.SearchRequested += FindWindow_SearchRequested;
                 findWindow.ShowDialog();
             }

@@ -4,7 +4,10 @@ using System.Windows.Input;
 using Microsoft.Win32;
 using System.Windows.Forms;
 using System.Text.Json.Serialization;
-
+using System.Windows.Interop;
+using System.Windows;
+using System;
+using Axis2.WPF.ViewModels;
 
 namespace Axis2.WPF.ViewModels.Settings
 {
@@ -97,7 +100,7 @@ namespace Axis2.WPF.ViewModels.Settings
         {
             if (!string.IsNullOrEmpty(DefaultClientPath) && File.Exists(DefaultClientPath))
             {
-                DefaultMulPath = Path.GetDirectoryName(DefaultClientPath) + "\\";
+                DefaultMulPath = Path.GetDirectoryName(DefaultClientPath) + "";
                 UpdateMulPaths(DefaultMulPath);
             }
         }
@@ -136,9 +139,9 @@ namespace Axis2.WPF.ViewModels.Settings
         private void BrowseMulPath()
         {
             FolderBrowserDialog folderBrowserDialog = new FolderBrowserDialog();
-            if (folderBrowserDialog.ShowDialog() == DialogResult.OK)
+            if (folderBrowserDialog.ShowDialog(new Wpf32Window(System.Windows.Application.Current.MainWindow)) == DialogResult.OK)
             {
-                DefaultMulPath = folderBrowserDialog.SelectedPath + "\\";
+                DefaultMulPath = folderBrowserDialog.SelectedPath + "";
                 UpdateMulPaths(DefaultMulPath);
             }
         }
@@ -146,7 +149,7 @@ namespace Axis2.WPF.ViewModels.Settings
         private void BrowseScriptsPath()
         {
             FolderBrowserDialog folderBrowserDialog = new FolderBrowserDialog();
-            if (folderBrowserDialog.ShowDialog() == DialogResult.OK)
+            if (folderBrowserDialog.ShowDialog(new Wpf32Window(System.Windows.Application.Current.MainWindow)) == DialogResult.OK)
             {
                 ScriptsPath = folderBrowserDialog.SelectedPath;
             }
